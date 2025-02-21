@@ -6,8 +6,10 @@ import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGR
 import { useMemo } from "react"
 import type { Memepool } from "./types/memepool"
 import IDL from "./idl/memepool.json"
+import { getPortfolioAccount, getPortfolioCounter, getWithdrawRequestAccount } from "./memepool-utils"
 
 const PROGRAM_ID = new PublicKey(IDL.address)
+const MEME_TOKEN_MINT = new PublicKey("6fARp4wWDXoRK2To7mamqo2GwY3UYbTd3W9xhRmq6Q9z")
 
 type VaultDepositAccounts = {
   depositer: PublicKey;
@@ -17,6 +19,17 @@ type VaultDepositAccounts = {
   systemProgram: PublicKey;
   tokenProgram: PublicKey;
   associatedTokenProgram: PublicKey;
+}
+
+type VaultRequestWithdrawAccounts = {
+  withdrawer: PublicKey;
+  vault: PublicKey;
+  memeMint: PublicKey;
+  withdrawerMemeAta: PublicKey;
+  portfolio: PublicKey;
+  withdrawRequest: PublicKey;
+  systemProgram: PublicKey;
+  tokenProgram: PublicKey;
 }
 
 export function useAnchorProgram() {
@@ -61,6 +74,47 @@ export function useAnchorProgram() {
     vault,
     memeMint,
   }
+}
+
+export function useVaultRequestWithdraw() {
+  const { connection } = useConnection()
+  const { publicKey, sendTransaction } = useWallet()
+  const { program, vault, memeMint } = useAnchorProgram()
+
+  return useMutation({
+    mutationFn: async (params: { amount: number }) => {
+      if (!publicKey || !program) throw new Error("Wallet not connected")
+
+      const withdrawerMemeAta = getAssociatedTokenAddressSync(memeMint, publicKey)
+      const withdraw = new BN(params.amount * Math.pow(10, 9))
+      
+      // Get Portfolio and Withdraw Request PDAs
+      const portfolio = getPortfolioAccount(publicKey, program.programId)
+      const counter = await getPortfolioCounter(portfolio, program)
+      const withdrawRequest = getWithdrawRequestAccount(publicKey, counter, program.programId)
+
+      const accounts: VaultRequestWithdrawAccounts = {
+        withdrawer: publicKey,
+        vault,
+        memeMint,
+        withdrawerMemeAta,
+        portfolio,
+        withdrawRequest,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      }
+
+      const tx = await program.methods
+        .vaultRequestWithdraw(withdraw)
+        .accounts(accounts)
+        .transaction()
+
+      const signature = await sendTransaction(tx, connection)
+      await connection.confirmTransaction(signature)
+      
+      return signature
+    }
+  })
 }
 
 export function useVaultDeposit() {
@@ -109,5 +163,26 @@ export function useGetBalance({ address }: { address: PublicKey | null }) {
       return lamports / LAMPORTS_PER_SOL
     },
     enabled: !!address
+  })
+}
+
+export function useGetTokenBalance({ owner }: { owner: PublicKey | null }) {
+  const { connection } = useConnection()
+
+  return useQuery({
+    queryKey: ['get-token-balance', { endpoint: connection.rpcEndpoint, owner: owner?.toBase58() }],
+    queryFn: async () => {
+      if (!owner) throw new Error('No owner address provided')
+      const ata = getAssociatedTokenAddressSync(MEME_TOKEN_MINT, owner)
+      
+      try {
+        const balance = await connection.getTokenAccountBalance(ata)
+        return parseFloat(balance.value.amount) / Math.pow(10, balance.value.decimals)
+      } catch (e) {
+        // If the token account doesn't exist yet, return 0
+        return 0
+      }
+    },
+    enabled: !!owner
   })
 } 
