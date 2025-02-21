@@ -65,7 +65,6 @@ export interface ClusterProviderContext {
 }
 
 const Context = createContext<ClusterProviderContext>({} as ClusterProviderContext)
-
 export function ClusterProvider({ children }: { children: ReactNode }) {
   const cluster = useAtomValue(activeClusterAtom)
   const clusters = useAtomValue(activeClustersAtom)
