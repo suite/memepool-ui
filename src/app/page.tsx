@@ -3,26 +3,15 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowRightLeft } from "lucide-react"
-import { useConnection, useWallet } from "@solana/wallet-adapter-react"
-import { LAMPORTS_PER_SOL } from "@solana/web3.js"
-import { useEffect, useState } from "react"
+import { useWallet } from "@solana/wallet-adapter-react"
+import { useState } from "react"
+import { useGetBalance, useVaultDeposit } from "@/lib/solana"
 
 export default function Home() {
   const { publicKey } = useWallet()
-  const { connection } = useConnection()
-  const [balance, setBalance] = useState<number | null>(null)
+  const { data: balance, isLoading: isLoadingBalance } = useGetBalance({ address: publicKey })
+  const { mutate: deposit, isPending: isDepositing } = useVaultDeposit()
   const [amount, setAmount] = useState("")
-
-  useEffect(() => {
-    if (!publicKey) {
-      setBalance(null)
-      return
-    }
-
-    connection.getBalance(publicKey).then(bal => {
-      setBalance(bal / LAMPORTS_PER_SOL)
-    })
-  }, [publicKey, connection])
 
   return (
     <div className="container mx-auto max-w-md py-12">
@@ -36,7 +25,7 @@ export default function Home() {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
-            {publicKey && balance !== null && (
+            {publicKey && balance !== undefined && !isLoadingBalance && (
               <div className="mt-1 text-sm text-muted-foreground px-1">
                 Balance: {balance.toFixed(4)} SOL
               </div>
@@ -48,7 +37,13 @@ export default function Home() {
             <div className="mt-1 h-5" />
           </div>
         </div>
-        <Button className="w-full">Deposit SOL</Button>
+        <Button 
+          className="w-full" 
+          disabled={!publicKey || isDepositing || !amount} 
+          onClick={() => deposit({ amount: parseFloat(amount) })}
+        >
+          {isDepositing ? "Depositing..." : "Deposit SOL"}
+        </Button>
       </div>
     </div>
   )
