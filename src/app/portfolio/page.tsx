@@ -1,13 +1,11 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CheckCircle2, Clock, ArrowDownCircle } from "lucide-react";
-
-const withdrawRequests = [
-  { id: 1, amount: 100, status: "ready", solAmount: 1.5 },
-  { id: 2, amount: 200, status: "pending", solAmount: 3.0 },
-  { id: 3, amount: 150, status: "claimed", solAmount: 2.25 },
-];
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useGetWithdrawRequests, useGetTokenBalance } from "@/lib/solana";
 
 function StatusIcon({ status }: { status: string }) {
   switch (status) {
@@ -23,6 +21,18 @@ function StatusIcon({ status }: { status: string }) {
 }
 
 export default function Portfolio() {
+  const { publicKey } = useWallet();
+  const { data: withdrawRequests, isLoading } = useGetWithdrawRequests();
+  const { data: tokenBalance } = useGetTokenBalance({ owner: publicKey });
+
+  if (!publicKey) {
+    return (
+      <div className="container mx-auto max-w-4xl py-12">
+        <h1 className="mb-8 text-center text-3xl font-bold">Connect your wallet to view portfolio</h1>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto max-w-4xl py-12">
       <h1 className="mb-8 text-center text-3xl font-bold">Your Portfolio</h1>
@@ -34,11 +44,11 @@ export default function Portfolio() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">$MEME Balance</p>
-              <p className="text-2xl font-bold">1,000 $MEME</p>
+              <p className="text-2xl font-bold">{tokenBalance?.toFixed(4) || "0"} $MEME</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Estimated SOL Value</p>
-              <p className="text-2xl font-bold">10 SOL</p>
+              <p className="text-2xl font-bold">Coming soon</p>
             </div>
           </div>
         </CardContent>
@@ -48,31 +58,41 @@ export default function Portfolio() {
           <CardTitle>Withdraw Requests</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Status</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>SOL + Yield</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {withdrawRequests.map((request) => (
-                <TableRow key={request.id}>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <StatusIcon status={request.status} />
-                      <span className="ml-2 capitalize">{request.status}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{request.amount} $MEME</TableCell>
-                  <TableCell>{request.solAmount} SOL</TableCell>
-                  <TableCell>{request.status === "ready" && <Button size="sm">Claim</Button>}</TableCell>
+          {isLoading ? (
+            <div className="text-center py-4 text-muted-foreground">Loading withdraw requests...</div>
+          ) : withdrawRequests?.length === 0 ? (
+            <div className="text-center py-4 text-muted-foreground">No withdraw requests found</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>SOL + Yield</TableHead>
+                  <TableHead>Action</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {withdrawRequests?.map((request) => (
+                  <TableRow key={request.count.toString()}>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <StatusIcon status={request.status === 0 ? "pending" : "ready"} />
+                        <span className="ml-2 capitalize">{request.status === 0 ? "pending" : "ready"}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{(Number(request.memeAmt) / Math.pow(10, 9)).toFixed(4)} $MEME</TableCell>
+                    <TableCell>Coming soon</TableCell>
+                    <TableCell>
+                      <div className={request.status !== 1 ? "cursor-not-allowed" : ""}>
+                        <Button size="sm" disabled={request.status !== 1}>Claim</Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

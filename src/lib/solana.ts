@@ -6,7 +6,7 @@ import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGR
 import { useMemo } from "react";
 import type { Memepool } from "./types/memepool";
 import IDL from "./idl/memepool.json";
-import { getPortfolioAccount, getPortfolioCounter, getWithdrawRequestAccount } from "./memepool-utils";
+import { getPortfolioAccount, getPortfolioCounter, getUserWithdrawRequests, getWithdrawRequestAccount } from "./memepool-utils";
 
 const PROGRAM_ID = new PublicKey(IDL.address);
 const MEME_TOKEN_MINT = new PublicKey("6fARp4wWDXoRK2To7mamqo2GwY3UYbTd3W9xhRmq6Q9z");
@@ -184,5 +184,19 @@ export function useGetTokenBalance({ owner }: { owner: PublicKey | null }) {
       }
     },
     enabled: !!owner
+  });
+}
+
+export function useGetWithdrawRequests() {
+  const { publicKey } = useWallet();
+  const { program } = useAnchorProgram();
+
+  return useQuery({
+    queryKey: ["withdraw-requests", { user: publicKey?.toBase58() }],
+    queryFn: async () => {
+      if (!publicKey || !program) throw new Error("Wallet not connected");
+      return getUserWithdrawRequests(program, publicKey);
+    },
+    enabled: !!publicKey && !!program,
   });
 } 

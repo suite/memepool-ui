@@ -15,7 +15,7 @@ export default function Withdraw() {
 
   return (
     <div className="container mx-auto max-w-md py-12">
-      <h1 className="mb-8 text-center text-3xl font-bold flex justify-center"><span className="whitespace-nowrap">Burn $MEME to get SOL + yield</span></h1>
+      <h1 className="mb-8 text-center text-3xl font-bold flex justify-center"><span className="whitespace-nowrap">Burn $MEME to get SOL + Yield</span></h1>
       <div className="space-y-4">
         <div className="flex items-start space-x-4">
           <div className="flex-1">
