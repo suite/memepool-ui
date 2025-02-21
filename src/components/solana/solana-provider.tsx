@@ -1,24 +1,24 @@
-'use client'
+"use client";
 
-import {WalletError} from '@solana/wallet-adapter-base'
-import {ConnectionProvider, WalletProvider,} from '@solana/wallet-adapter-react'
-import {WalletModalProvider} from '@solana/wallet-adapter-react-ui'
-import dynamic from 'next/dynamic'
-import {ReactNode, useCallback, useMemo} from 'react'
-import {useCluster} from '../cluster/cluster-data-access'
+import {WalletError} from "@solana/wallet-adapter-base";
+import {ConnectionProvider, WalletProvider,} from "@solana/wallet-adapter-react";
+import {WalletModalProvider} from "@solana/wallet-adapter-react-ui";
+import dynamic from "next/dynamic";
+import {ReactNode, useCallback, useMemo} from "react";
+import {useCluster} from "../cluster/cluster-data-access";
 
-require('@solana/wallet-adapter-react-ui/styles.css')
+require("@solana/wallet-adapter-react-ui/styles.css");
 
-export const WalletButton = dynamic(async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton, {
+export const WalletButton = dynamic(async () => (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton, {
   ssr: false,
-})
+});
 
 export function SolanaProvider({ children }: { children: ReactNode }) {
-  const { cluster } = useCluster()
-  const endpoint = useMemo(() => cluster.endpoint, [cluster])
+  const { cluster } = useCluster();
+  const endpoint = useMemo(() => cluster.endpoint, [cluster]);
   const onError = useCallback((error: WalletError) => {
-    console.error(error)
-  }, [])
+    console.error(error);
+  }, []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
@@ -26,6 +26,6 @@ export function SolanaProvider({ children }: { children: ReactNode }) {
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
-  )
+  );
 }
 

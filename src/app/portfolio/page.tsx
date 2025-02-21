@@ -1,24 +1,24 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { CheckCircle2, Clock, ArrowDownCircle } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CheckCircle2, Clock, ArrowDownCircle } from "lucide-react";
 
 const withdrawRequests = [
   { id: 1, amount: 100, status: "ready", solAmount: 1.5 },
   { id: 2, amount: 200, status: "pending", solAmount: 3.0 },
   { id: 3, amount: 150, status: "claimed", solAmount: 2.25 },
-]
+];
 
 function StatusIcon({ status }: { status: string }) {
   switch (status) {
     case "ready":
-      return <CheckCircle2 className="h-5 w-5 text-green-500" />
+      return <CheckCircle2 className="h-5 w-5 text-green-500" />;
     case "pending":
-      return <Clock className="h-5 w-5 text-yellow-500" />
+      return <Clock className="h-5 w-5 text-yellow-500" />;
     case "claimed":
-      return <ArrowDownCircle className="h-5 w-5 text-blue-500" />
+      return <ArrowDownCircle className="h-5 w-5 text-blue-500" />;
     default:
-      return null
+      return null;
   }
 }
 
@@ -76,5 +76,5 @@ export default function Portfolio() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 } 

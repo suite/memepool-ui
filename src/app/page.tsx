@@ -1,17 +1,17 @@
-'use client'
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ArrowRightLeft } from "lucide-react"
-import { useWallet } from "@solana/wallet-adapter-react"
-import { useState } from "react"
-import { useGetBalance, useVaultDeposit } from "@/lib/solana"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ArrowRightLeft } from "lucide-react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useState } from "react";
+import { useGetBalance, useVaultDeposit } from "@/lib/solana";
 
 export default function Home() {
-  const { publicKey } = useWallet()
-  const { data: balance, isLoading: isLoadingBalance } = useGetBalance({ address: publicKey })
-  const { mutate: deposit, isPending: isDepositing } = useVaultDeposit()
-  const [amount, setAmount] = useState("")
+  const { publicKey } = useWallet();
+  const { data: balance, isLoading: isLoadingBalance } = useGetBalance({ address: publicKey });
+  const { mutate: deposit, isPending: isDepositing } = useVaultDeposit();
+  const [amount, setAmount] = useState("");
 
   return (
     <div className="container mx-auto max-w-md py-12">
@@ -46,5 +46,5 @@ export default function Home() {
         </Button>
       </div>
     </div>
-  )
+  );
 }

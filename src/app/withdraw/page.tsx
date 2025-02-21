@@ -1,17 +1,17 @@
-'use client'
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ArrowRightLeft } from "lucide-react"
-import { useWallet } from "@solana/wallet-adapter-react"
-import { useState } from "react"
-import { useGetTokenBalance, useVaultRequestWithdraw } from "@/lib/solana"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ArrowRightLeft } from "lucide-react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useState } from "react";
+import { useGetTokenBalance, useVaultRequestWithdraw } from "@/lib/solana";
 
 export default function Withdraw() {
-  const { publicKey } = useWallet()
-  const { data: tokenBalance, isLoading: isLoadingBalance } = useGetTokenBalance({ owner: publicKey })
-  const { mutate: requestWithdraw, isPending: isRequesting } = useVaultRequestWithdraw()
-  const [amount, setAmount] = useState("")
+  const { publicKey } = useWallet();
+  const { data: tokenBalance, isLoading: isLoadingBalance } = useGetTokenBalance({ owner: publicKey });
+  const { mutate: requestWithdraw, isPending: isRequesting } = useVaultRequestWithdraw();
+  const [amount, setAmount] = useState("");
 
   return (
     <div className="container mx-auto max-w-md py-12">
@@ -46,5 +46,5 @@ export default function Withdraw() {
         </Button>
       </div>
     </div>
-  )
+  );
 }
