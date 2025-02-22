@@ -9,7 +9,7 @@ import IDL from "./idl/memepool.json";
 import { getPortfolioAccount, getPortfolioCounter, getUserWithdrawRequests, getWithdrawRequestAccount } from "./memepool-utils";
 
 const PROGRAM_ID = new PublicKey(IDL.address);
-const MEME_TOKEN_MINT = new PublicKey("6fARp4wWDXoRK2To7mamqo2GwY3UYbTd3W9xhRmq6Q9z");
+const MEME_TOKEN_MINT = new PublicKey("3CGTuYVDZjFUPFxcCahzK2gJWN4HLGLoJAzQ5vcztMcR"); // TODO: use pda
 
 type VaultDepositAccounts = {
   depositer: PublicKey;
@@ -28,8 +28,10 @@ type VaultRequestWithdrawAccounts = {
   withdrawerMemeAta: PublicKey;
   portfolio: PublicKey;
   withdrawRequest: PublicKey;
+  withdrawRequestMemeAta: PublicKey;
   systemProgram: PublicKey;
   tokenProgram: PublicKey;
+  associatedTokenProgram: PublicKey;
 }
 
 export function useAnchorProgram() {
@@ -92,6 +94,7 @@ export function useVaultRequestWithdraw() {
       const portfolio = getPortfolioAccount(publicKey, program.programId);
       const counter = await getPortfolioCounter(portfolio, program);
       const withdrawRequest = getWithdrawRequestAccount(publicKey, counter, program.programId);
+      const withdrawRequestMemeAta = getAssociatedTokenAddressSync(memeMint, withdrawRequest, true);
 
       const accounts: VaultRequestWithdrawAccounts = {
         withdrawer: publicKey,
@@ -100,8 +103,10 @@ export function useVaultRequestWithdraw() {
         withdrawerMemeAta,
         portfolio,
         withdrawRequest,
+        withdrawRequestMemeAta,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       };
 
       const tx = await program.methods
