@@ -6,12 +6,31 @@ import { ArrowRightLeft } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
 import { useGetBalance, useVaultDeposit } from "@/lib/solana";
+import { toast } from "sonner";
 
 export default function Home() {
   const { publicKey } = useWallet();
   const { data: balance, isLoading: isLoadingBalance } = useGetBalance({ address: publicKey });
-  const { mutate: deposit, isPending: isDepositing } = useVaultDeposit();
+  const { mutateAsync: deposit, isPending: isDepositing } = useVaultDeposit();
   const [amount, setAmount] = useState("");
+
+  const handleDeposit = async () => {
+    try {
+      toast.promise(
+        deposit({ amount: parseFloat(amount) }),
+        {
+          loading: "Confirming transaction...",
+          success: () => {
+            setAmount("");
+            return "Successfully deposited SOL";
+          },
+          error: "Failed to deposit SOL"
+        }
+      );
+    } catch (error) {
+      console.error("Failed to deposit:", error);
+    }
+  };
 
   return (
     <div className="container mx-auto max-w-md py-12">
@@ -40,7 +59,7 @@ export default function Home() {
         <Button 
           className="w-full" 
           disabled={!publicKey || isDepositing || !amount} 
-          onClick={() => deposit({ amount: parseFloat(amount) })}
+          onClick={handleDeposit}
         >
           {isDepositing ? "Depositing..." : "Deposit SOL"}
         </Button>

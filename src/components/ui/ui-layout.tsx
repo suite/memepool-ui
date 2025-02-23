@@ -4,7 +4,7 @@ import Link from "next/link";
 import {usePathname} from "next/navigation";
 import * as React from "react";
 import {ReactNode, Suspense, useEffect, useRef} from "react";
-import toast, {Toaster} from "react-hot-toast";
+import { Toaster, toast } from "sonner";
 
 import {ExplorerLink} from "../cluster/cluster-ui";
 import {WalletButton} from "../solana/solana-provider";
@@ -143,11 +143,11 @@ export function ellipsify(str = "", len = 4) {
 
 export function useTransactionToast() {
   return (signature: string) => {
-    toast.success(
-      <div className={"text-center"}>
-        <div className="text-lg">Transaction sent</div>
+    toast.success("Transaction sent", {
+      description: (
         <ExplorerLink path={`tx/${signature}`} label={"View Transaction"} className="btn btn-xs btn-primary" />
-      </div>,
-    );
+      ),
+      duration: 4000,
+    });
   };
 }

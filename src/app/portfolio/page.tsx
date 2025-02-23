@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CheckCircle2, Clock, ArrowDownCircle } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { useGetWithdrawRequests, useGetTokenBalance } from "@/lib/solana";
+import { useGetWithdrawRequests, useGetTokenBalance, useVaultFinalizeWithdraw } from "@/lib/solana";
+import { toast } from "sonner";
+import { useState } from "react";
 
 function StatusIcon({ status }: { status: string }) {
   switch (status) {
@@ -22,8 +24,32 @@ function StatusIcon({ status }: { status: string }) {
 
 export default function Portfolio() {
   const { publicKey } = useWallet();
-  const { data: withdrawRequests, isLoading } = useGetWithdrawRequests();
+  const { data: withdrawRequests, isLoading, refetch } = useGetWithdrawRequests();
   const { data: tokenBalance } = useGetTokenBalance({ owner: publicKey });
+  const finalizeWithdraw = useVaultFinalizeWithdraw();
+  const [claimingIds, setClaimingIds] = useState<string[]>([]);
+
+  const handleClaim = async (counter: number) => {
+    const id = counter.toString();
+    try {
+      setClaimingIds(prev => [...prev, id]);
+      toast.promise(
+        finalizeWithdraw.mutateAsync({ counter }),
+        {
+          loading: "Confirming transaction...",
+          success: () => {
+            refetch();
+            return "Successfully claimed withdraw request";
+          },
+          error: "Failed to claim withdraw request"
+        }
+      );
+    } catch (error) {
+      console.error("Failed to claim:", error);
+    } finally {
+      setClaimingIds(prev => prev.filter(claimId => claimId !== id));
+    }
+  };
 
   if (!publicKey) {
     return (
@@ -73,23 +99,32 @@ export default function Portfolio() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {withdrawRequests?.map((request) => (
-                  <TableRow key={request.count.toString()}>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <StatusIcon status={request.status === 0 ? "pending" : "ready"} />
-                        <span className="ml-2 capitalize">{request.status === 0 ? "pending" : "ready"}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{(Number(request.memeAmt) / Math.pow(10, 9)).toFixed(4)} $MEME</TableCell>
-                    <TableCell>Coming soon</TableCell>
-                    <TableCell>
-                      <div className={request.status !== 1 ? "cursor-not-allowed" : ""}>
-                        <Button size="sm" disabled={request.status !== 1}>Claim</Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {withdrawRequests?.map((request) => {
+                  const isClaimingThis = claimingIds.includes(request.count.toString());
+                  return (
+                    <TableRow key={request.count.toString()}>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <StatusIcon status={request.status === 0 ? "pending" : "ready"} />
+                          <span className="ml-2 capitalize">{request.status === 0 ? "pending" : "ready"}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{(Number(request.memeAmt) / Math.pow(10, 9)).toFixed(4)} $MEME</TableCell>
+                      <TableCell>Coming soon</TableCell>
+                      <TableCell>
+                        <div className={request.status !== 1 ? "cursor-not-allowed" : ""}>
+                          <Button 
+                            size="sm" 
+                            disabled={request.status !== 1 || isClaimingThis} 
+                            onClick={() => handleClaim(request.count.toNumber())}
+                          >
+                            {isClaimingThis ? "Claiming..." : "Claim"}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

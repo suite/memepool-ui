@@ -6,12 +6,31 @@ import { ArrowRightLeft } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
 import { useGetTokenBalance, useVaultRequestWithdraw } from "@/lib/solana";
+import { toast } from "sonner";
 
 export default function Withdraw() {
   const { publicKey } = useWallet();
   const { data: tokenBalance, isLoading: isLoadingBalance } = useGetTokenBalance({ owner: publicKey });
-  const { mutate: requestWithdraw, isPending: isRequesting } = useVaultRequestWithdraw();
+  const { mutateAsync: requestWithdraw, isPending: isRequesting } = useVaultRequestWithdraw();
   const [amount, setAmount] = useState("");
+
+  const handleWithdraw = async () => {
+    try {
+      toast.promise(
+        requestWithdraw({ amount: parseFloat(amount) }),
+        {
+          loading: "Confirming transaction...",
+          success: () => {
+            setAmount("");
+            return "Successfully requested withdraw";
+          },
+          error: "Failed to request withdraw"
+        }
+      );
+    } catch (error) {
+      console.error("Failed to request withdraw:", error);
+    }
+  };
 
   return (
     <div className="container mx-auto max-w-md py-12">
@@ -40,7 +59,7 @@ export default function Withdraw() {
         <Button 
           className="w-full" 
           disabled={!publicKey || isRequesting || !amount || parseFloat(amount) > (tokenBalance || 0)} 
-          onClick={() => requestWithdraw({ amount: parseFloat(amount) })}
+          onClick={handleWithdraw}
         >
           {isRequesting ? "Requesting Withdraw..." : "Request Withdraw"}
         </Button>
