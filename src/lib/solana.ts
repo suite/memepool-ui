@@ -34,6 +34,16 @@ type VaultRequestWithdrawAccounts = {
   associatedTokenProgram: PublicKey;
 }
 
+type VaultFinalizeWithdrawAccounts = {
+  withdrawer: PublicKey;
+  withdrawRequest: PublicKey;
+  memeMint: PublicKey;
+  vault: PublicKey;
+  withdrawRequestMemeAta: PublicKey;
+  systemProgram: PublicKey;
+  tokenProgram: PublicKey;
+}
+
 export function useAnchorProgram() {
   const { connection } = useConnection();
   const wallet = useWallet();
@@ -203,5 +213,40 @@ export function useGetWithdrawRequests() {
       return getUserWithdrawRequests(program, publicKey);
     },
     enabled: !!publicKey && !!program,
+  });
+}
+
+export function useVaultFinalizeWithdraw() {
+  const { connection } = useConnection();
+  const { publicKey, sendTransaction } = useWallet();
+  const { program, vault, memeMint } = useAnchorProgram();
+
+  return useMutation({
+    mutationFn: async (params: { counter: number }) => {
+      if (!publicKey || !program) throw new Error("Wallet not connected");
+
+      const withdrawRequest = getWithdrawRequestAccount(publicKey, new BN(params.counter), program.programId);
+      const withdrawRequestMemeAta = getAssociatedTokenAddressSync(memeMint, withdrawRequest, true);
+
+      const accounts: VaultFinalizeWithdrawAccounts = {
+        withdrawer: publicKey,
+        withdrawRequest,
+        memeMint,
+        vault,
+        withdrawRequestMemeAta,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      };
+
+      const tx = await program.methods
+        .vaultFinalizeWithdraw()
+        .accounts(accounts)
+        .transaction();
+
+      const signature = await sendTransaction(tx, connection);
+      await connection.confirmTransaction(signature);
+      
+      return signature;
+    }
   });
 } 
