@@ -9,13 +9,14 @@ import IDL from "./idl/memepool.json";
 import { getPortfolioAccount, getPortfolioCounter, getUserWithdrawRequests, getWithdrawRequestAccount } from "./memepool-utils";
 
 const PROGRAM_ID = new PublicKey(IDL.address);
-const MEME_TOKEN_MINT = new PublicKey("3CGTuYVDZjFUPFxcCahzK2gJWN4HLGLoJAzQ5vcztMcR"); // TODO: use pda
 
 type VaultDepositAccounts = {
   depositer: PublicKey;
   vault: PublicKey;
   memeMint: PublicKey;
+  wsolMint: PublicKey;
   depositerMemeAta: PublicKey;
+  vaultWsolAta: PublicKey;
   systemProgram: PublicKey;
   tokenProgram: PublicKey;
   associatedTokenProgram: PublicKey;
@@ -25,10 +26,13 @@ type VaultRequestWithdrawAccounts = {
   withdrawer: PublicKey;
   vault: PublicKey;
   memeMint: PublicKey;
+  wsolMint: PublicKey;
   withdrawerMemeAta: PublicKey;
   portfolio: PublicKey;
   withdrawRequest: PublicKey;
   withdrawRequestMemeAta: PublicKey;
+  vaultWsolAta: PublicKey;
+  tempVaultWsolAta: PublicKey;
   systemProgram: PublicKey;
   tokenProgram: PublicKey;
   associatedTokenProgram: PublicKey;
@@ -59,6 +63,11 @@ export function useAnchorProgram() {
     []
   );
 
+  const wsolMint = useMemo(() => 
+    new PublicKey("So11111111111111111111111111111111111111112"),
+    []
+  );
+
   // Create AnchorProvider and Program instances
   const provider = useMemo(() => {
     if (!wallet.publicKey || !wallet.signTransaction) return null;
@@ -85,13 +94,14 @@ export function useAnchorProgram() {
     program,
     vault,
     memeMint,
+    wsolMint,
   };
 }
 
 export function useVaultRequestWithdraw() {
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
-  const { program, vault, memeMint } = useAnchorProgram();
+  const { program, vault, memeMint, wsolMint } = useAnchorProgram();
 
   return useMutation({
     mutationFn: async (params: { amount: number }) => {
@@ -105,15 +115,20 @@ export function useVaultRequestWithdraw() {
       const counter = await getPortfolioCounter(portfolio, program);
       const withdrawRequest = getWithdrawRequestAccount(publicKey, counter, program.programId);
       const withdrawRequestMemeAta = getAssociatedTokenAddressSync(memeMint, withdrawRequest, true);
+      const vaultWsolAta = getAssociatedTokenAddressSync(wsolMint, vault, true);
+      const tempVaultWsolAta = getAssociatedTokenAddressSync(wsolMint, withdrawRequest, true);
 
       const accounts: VaultRequestWithdrawAccounts = {
         withdrawer: publicKey,
         vault,
         memeMint,
+        wsolMint,
         withdrawerMemeAta,
         portfolio,
         withdrawRequest,
         withdrawRequestMemeAta,
+        vaultWsolAta,
+        tempVaultWsolAta,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -135,12 +150,13 @@ export function useVaultRequestWithdraw() {
 export function useVaultDeposit() {
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
-  const { program, vault, memeMint } = useAnchorProgram();
+  const { program, vault, memeMint, wsolMint } = useAnchorProgram();
 
   return useMutation({
     mutationFn: async (params: { amount: number }) => {
       if (!publicKey || !program) throw new Error("Wallet not connected");
 
+      const vaultWsolAta = getAssociatedTokenAddressSync(wsolMint, vault, true);
       const depositerMemeAta = getAssociatedTokenAddressSync(memeMint, publicKey);
       const deposit = new BN(params.amount * LAMPORTS_PER_SOL);
 
@@ -148,7 +164,9 @@ export function useVaultDeposit() {
         depositer: publicKey,
         vault,
         memeMint,
+        wsolMint,
         depositerMemeAta,
+        vaultWsolAta,
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -183,12 +201,13 @@ export function useGetBalance({ address }: { address: PublicKey | null }) {
 
 export function useGetTokenBalance({ owner }: { owner: PublicKey | null }) {
   const { connection } = useConnection();
+  const { memeMint } = useAnchorProgram();
 
   return useQuery({
     queryKey: ["get-token-balance", { endpoint: connection.rpcEndpoint, owner: owner?.toBase58() }],
     queryFn: async () => {
       if (!owner) throw new Error("No owner address provided");
-      const ata = getAssociatedTokenAddressSync(MEME_TOKEN_MINT, owner);
+      const ata = getAssociatedTokenAddressSync(memeMint, owner);
       
       try {
         const balance = await connection.getTokenAccountBalance(ata);
