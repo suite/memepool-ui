@@ -29,6 +29,9 @@ export function UiLayout({ children }: { children: ReactNode }) {
             <Link href="/portfolio" className={pathname === "/portfolio" ? "text-foreground" : "text-foreground/60"}>
               Portfolio
             </Link>
+            <Link href="/aggregator" className={pathname === "/aggregator" ? "text-foreground" : "text-foreground/60"}>
+              Aggregator
+            </Link>
           </nav>
           <div className="ml-auto">
             <WalletButton />

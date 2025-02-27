@@ -7,6 +7,7 @@ import { useMemo } from "react";
 import type { Memepool } from "./types/memepool";
 import IDL from "./idl/memepool.json";
 import { getPortfolioAccount, getPortfolioCounter, getUserWithdrawRequests, getWithdrawRequestAccount } from "./memepool-utils";
+import { Raydium } from "@raydium-io/raydium-sdk-v2";
 
 const PROGRAM_ID = new PublicKey(IDL.address);
 
@@ -267,5 +268,147 @@ export function useVaultFinalizeWithdraw() {
       
       return signature;
     }
+  });
+}
+
+export function useRaydiumSdk() {
+  const { connection } = useConnection();
+  const { publicKey } = useWallet();
+
+  return useQuery({
+    queryKey: ["raydium-sdk", { endpoint: connection.rpcEndpoint }],
+    queryFn: async () => {
+      const cluster = connection.rpcEndpoint.includes("devnet") ? "devnet" : "mainnet";
+      
+      const raydium = await Raydium.load({
+        connection,
+        cluster,
+        owner: publicKey || undefined,
+        disableFeatureCheck: true,
+        blockhashCommitment: "finalized",
+      });
+
+      return raydium;
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+}
+
+export function useGetPoolInfo(pool: { 
+  id: string; 
+  name: string; 
+  mintA: string; 
+  mintB: string; 
+  poolPublicKey: string; 
+} | null) {
+  const { connection } = useConnection();
+  const { data: raydium, isLoading: isRaydiumLoading } = useRaydiumSdk();
+  const { vault } = useAnchorProgram();
+
+  return useQuery({
+    queryKey: ["pool-info", { poolAddress: pool?.poolPublicKey, endpoint: connection.rpcEndpoint }],
+    queryFn: async () => {
+      if (!pool || !raydium) throw new Error("Pool data or Raydium SDK not available");
+      
+      try {
+        // Get pool information from Raydium SDK
+        const poolInfo = await raydium.cpmm.getRpcPoolInfo(pool.poolPublicKey);
+
+        // Get mint addresses as PublicKeys directly
+        const mintA = poolInfo.mintA;
+        const mintB = poolInfo.mintB;
+        const mintLp = poolInfo.mintLp;
+        
+        const tokenASymbol = pool.mintA;
+        const tokenBSymbol = pool.mintB;
+        const tokenADecimals = poolInfo.mintDecimalA;
+        const tokenBDecimals = poolInfo.mintDecimalB;
+        const lpDecimals = poolInfo.lpDecimals;
+        
+        // Extract amount values safely
+        const tokenAAmount = Number(poolInfo.vaultAAmount.toString());
+        const tokenBAmount = Number(poolInfo.vaultBAmount.toString());
+
+        // Log pool balances for debugging
+        console.log("Pool balances:", {
+          poolId: pool.id,
+          tokenA: {
+            symbol: tokenASymbol,
+            amount: tokenAAmount,
+            decimals: tokenADecimals,
+            formatted: tokenAAmount / Math.pow(10, tokenADecimals)
+          },
+          tokenB: {
+            symbol: tokenBSymbol, 
+            amount: tokenBAmount,
+            decimals: tokenBDecimals,
+            formatted: tokenBAmount / Math.pow(10, tokenBDecimals)
+          }
+        });
+        
+        // Get LP supply safely using type assertion for now
+        // Note: The exact property might depend on the SDK version
+        const lpSupply = Number((poolInfo as any).lpSupply?.toString() || "0");
+        
+        // Get the aggregator's LP balance
+        let aggregatorLpBalance = 0;
+        try {
+          // Create ATA for vault and LP mint
+          const vaultLpAta = getAssociatedTokenAddressSync(
+            mintLp,
+            vault,
+            true
+          );
+          
+          // Get token balance
+          const balanceResponse = await connection.getTokenAccountBalance(vaultLpAta);
+          aggregatorLpBalance = Number(balanceResponse.value.amount);
+        } catch (error) {
+          console.warn("Failed to fetch aggregator LP balance:", error);
+        }
+        
+        return {
+          poolAddress: pool.poolPublicKey,
+          token1: {
+            mint: mintA,
+            symbol: tokenASymbol,
+            amount: tokenAAmount,
+            decimals: tokenADecimals,
+          },
+          token2: {
+            mint: mintB,
+            symbol: tokenBSymbol,
+            amount: tokenBAmount,
+            decimals: tokenBDecimals,
+          },
+          lpSupply,
+          lpMint: mintLp,
+          lpDecimals,
+          aggregatorLpBalance,
+        };
+      } catch (error) {
+        console.error("Error fetching pool info:", error);
+        throw new Error(`Failed to fetch pool info: ${String(error)}`);
+      }
+    },
+    enabled: !!pool && !!raydium && !isRaydiumLoading,
+  });
+}
+
+export function useGetAggregatorPools() {
+  // hard code for now
+  return useQuery({
+    queryKey: ["aggregator-pools"],
+    queryFn: async () => {
+      return [
+        {
+          id: "1",
+          name: "WSOL-MEMEPOOLTEST",
+          mintA: "WSOL",
+          mintB: "MEMEPOOLTEST",
+          poolPublicKey: "2zQi1M8QrJpXxLWNyBuec3N7hNG1x7DmChctYYeE5HLT",
+        }
+      ];
+    },
   });
 } 
