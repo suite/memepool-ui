@@ -328,6 +328,7 @@ export function useGetPoolInfo(pool: {
         // Extract amount values safely
         const tokenAAmount = Number(poolInfo.vaultAAmount.toString());
         const tokenBAmount = Number(poolInfo.vaultBAmount.toString());
+        const lpSupply = Number(poolInfo.lpAmount.toString());
 
         // Log pool balances for debugging
         console.log("Pool balances:", {
@@ -345,10 +346,6 @@ export function useGetPoolInfo(pool: {
             formatted: tokenBAmount / Math.pow(10, tokenBDecimals)
           }
         });
-        
-        // Get LP supply safely using type assertion for now
-        // Note: The exact property might depend on the SDK version
-        const lpSupply = Number((poolInfo as any).lpSupply?.toString() || "0");
         
         // Get the aggregator's LP balance
         let aggregatorLpBalance = 0;
