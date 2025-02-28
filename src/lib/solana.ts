@@ -403,7 +403,7 @@ export function useGetAggregatorPools() {
           name: "WSOL-MEMEPOOLTEST",
           mintA: "WSOL",
           mintB: "MEMEPOOLTEST",
-          poolPublicKey: "2zQi1M8QrJpXxLWNyBuec3N7hNG1x7DmChctYYeE5HLT",
+          poolPublicKey: "88hgYfHGZcDfzdqMcG5cEbo82vd2SYkMEhYwAgZcL73C",
         }
       ];
     },
