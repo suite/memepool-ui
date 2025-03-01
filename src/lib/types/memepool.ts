@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/memepool.json`.
  */
 export type Memepool = {
-  "address": "F2f16ivA9a7BwLA6hmLcny2fD15XDToBnpxERVNdtwSy",
+  "address": "2FFxe3uuZcEoKEdtotrANZmYQZxiaqAoZC6afxYFTWoz",
   "metadata": {
     "name": "memepool",
     "version": "0.1.0",
@@ -303,6 +303,10 @@ export type Memepool = {
         {
           "name": "maximumToken1Amount",
           "type": "u64"
+        },
+        {
+          "name": "depositValue",
+          "type": "u64"
         }
       ]
     },
@@ -470,6 +474,219 @@ export type Memepool = {
         },
         {
           "name": "minimumAmountOut",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "lpWithdraw",
+      "discriminator": [
+        205,
+        206,
+        130,
+        170,
+        173,
+        51,
+        11,
+        169
+      ],
+      "accounts": [
+        {
+          "name": "vaultPool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "poolState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "aggregator",
+          "writable": true,
+          "signer": true,
+          "address": "4tvxgUWQM7EtyW8FYjdNdexzHn4iSFFDYduqzdNaEfHW"
+        },
+        {
+          "name": "cpSwapProgram",
+          "address": "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
+        },
+        {
+          "name": "authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  97,
+                  110,
+                  100,
+                  95,
+                  108,
+                  112,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  95,
+                  115,
+                  101,
+                  101,
+                  100
+                ]
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "cpSwapProgram"
+            }
+          }
+        },
+        {
+          "name": "poolState",
+          "docs": [
+            "Pool state account"
+          ],
+          "writable": true
+        },
+        {
+          "name": "ownerLpToken",
+          "docs": [
+            "Owner lp token account"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token0Account",
+          "docs": [
+            "The owner's token account for receive token_0"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token1Account",
+          "docs": [
+            "The owner's token account for receive token_1"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token0Vault",
+          "docs": [
+            "The address that holds pool tokens for token_0"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token1Vault",
+          "docs": [
+            "The address that holds pool tokens for token_1"
+          ],
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "docs": [
+            "token Program"
+          ],
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "tokenProgram2022",
+          "docs": [
+            "Token program 2022"
+          ],
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "vault0Mint",
+          "docs": [
+            "The mint of token_0 vault"
+          ]
+        },
+        {
+          "name": "vault1Mint",
+          "docs": [
+            "The mint of token_1 vault"
+          ]
+        },
+        {
+          "name": "lpMint",
+          "docs": [
+            "Pool lp token mint"
+          ],
+          "writable": true
+        },
+        {
+          "name": "memoProgram",
+          "docs": [
+            "memo program"
+          ],
+          "address": "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+        }
+      ],
+      "args": [
+        {
+          "name": "lpTokenAmount",
+          "type": "u64"
+        },
+        {
+          "name": "minimumToken0Amount",
+          "type": "u64"
+        },
+        {
+          "name": "minimumToken1Amount",
+          "type": "u64"
+        },
+        {
+          "name": "withdrawValue",
           "type": "u64"
         }
       ]
@@ -881,6 +1098,186 @@ export type Memepool = {
           }
         },
         {
+          "name": "vaultWsolAta",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wsolMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "tempVaultWsolAta",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "withdrawRequest"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wsolMint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
           "name": "vault",
           "writable": true,
           "pda": {
@@ -916,12 +1313,19 @@ export type Memepool = {
           }
         },
         {
+          "name": "wsolMint"
+        },
+        {
           "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         }
       ],
       "args": [
@@ -2004,6 +2408,10 @@ export type Memepool = {
           },
           {
             "name": "lamports",
+            "type": "u64"
+          },
+          {
+            "name": "availableLamports",
             "type": "u64"
           }
         ]
